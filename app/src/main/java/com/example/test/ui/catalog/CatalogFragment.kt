@@ -2,6 +2,8 @@ package com.example.test.ui.catalog
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -34,6 +36,9 @@ class CatalogFragment : Fragment() {
     private lateinit var searchHistory: MutableList<String>
     private lateinit var historyAdapter: ArrayAdapter<String>
     private lateinit var categoryAdapter: CustomAdapter
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var searchRunnable: Runnable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -82,6 +87,11 @@ class CatalogFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 clearButton.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
                 toggleHistoryListView(s.isNullOrEmpty())
+
+                // Сбрасываем и перезапускаем таймер для автоматического поиска
+                searchRunnable?.let { handler.removeCallbacks(it) }
+                searchRunnable = Runnable { performSearch() }
+                handler.postDelayed(searchRunnable!!, 2000)
             }
 
             override fun afterTextChanged(s: Editable?) {}
@@ -112,12 +122,7 @@ class CatalogFragment : Fragment() {
         }
 
         searchButton.setOnClickListener {
-            val query = editTextSearchQuery.text.toString()
-            if (query.isNotEmpty()) {
-                saveSearchQuery(query)
-            }
-            hideKeyboard()
-            toggleHistoryListView(true)
+            performSearch()
         }
 
         return root
@@ -132,6 +137,15 @@ class CatalogFragment : Fragment() {
             listView.visibility = View.GONE
             historyListView.visibility = View.VISIBLE
             clearHistoryButton.visibility = View.VISIBLE
+        }
+    }
+
+    private fun performSearch() {
+        val query = editTextSearchQuery.text.toString()
+        if (query.isNotEmpty()) {
+            saveSearchQuery(query)
+            hideKeyboard()
+            toggleHistoryListView(true)
         }
     }
 
@@ -177,5 +191,7 @@ class CatalogFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        // Удаляем все колбэки из хендлера при уничтожении фрагмента
+        handler.removeCallbacksAndMessages(null)
     }
 }

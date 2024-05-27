@@ -46,6 +46,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Поиск"
+                android:visibility="gone"
                 android:textColor="@color/white"
                 android:textSize="@dimen/dp_8" />
 
@@ -66,7 +67,7 @@
         <ListView
             android:id="@+id/listView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="@dimen/dp_5"
             android:layout_marginEnd="@dimen/dp_5"
             android:clickable="true" />
