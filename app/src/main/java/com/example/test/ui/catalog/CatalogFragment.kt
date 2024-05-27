@@ -1,5 +1,6 @@
 package com.example.test.ui.catalog
 
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -7,9 +8,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import androidx.core.content.ContextCompat.getSystemService
+import android.widget.ListView
 import androidx.fragment.app.Fragment
 import com.example.test.R
 import com.example.test.databinding.FragmentDashboardBinding
@@ -17,12 +19,21 @@ import com.example.test.databinding.FragmentDashboardBinding
 class CatalogFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
-
     private val binding get() = _binding!!
 
     private lateinit var editTextSearchQuery: EditText
+    private lateinit var searchButton: Button
     private lateinit var clearButton: Button
+    private lateinit var clearHistoryButton: Button
+    private lateinit var listView: ListView
+    private lateinit var historyListView: ListView
     private var searchQuery: String = ""
+
+    private val PREFS_NAME = "search_prefs"
+    private val SEARCH_HISTORY_KEY = "search_history"
+    private lateinit var searchHistory: MutableList<String>
+    private lateinit var historyAdapter: ArrayAdapter<String>
+    private lateinit var categoryAdapter: CustomAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,10 +43,12 @@ class CatalogFragment : Fragment() {
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        var listView = binding.listView
+        listView = binding.listView
+        historyListView = root.findViewById(R.id.searchHistoryListView)
         editTextSearchQuery = root.findViewById(R.id.editTextText)
+        searchButton = root.findViewById(R.id.searchButton)
         clearButton = root.findViewById(R.id.clearButton)
-
+        clearHistoryButton = root.findViewById(R.id.clearHistoryButton)
 
         // Восстанавливаем состояние текста поискового запроса
         if (savedInstanceState != null) {
@@ -44,6 +57,7 @@ class CatalogFragment : Fragment() {
             clearButton.visibility = if (searchQuery.isNotEmpty()) View.VISIBLE else View.GONE
         }
 
+        // Настраиваем адаптеры для списка категорий и истории поиска
         val dataList = listOf(
             Item(R.drawable.free_icon_appliances, "Бытовая техника"),
             Item(R.drawable.free_icon_hairdryer, "Здоровье и красота"),
@@ -55,26 +69,70 @@ class CatalogFragment : Fragment() {
             Item(R.drawable.free_icon_tool_box, "Инструменты")
         )
 
-        val adapter = CustomAdapter(requireContext(), dataList)
-        listView.adapter = adapter
+        categoryAdapter = CustomAdapter(requireContext(), dataList)
+        listView.adapter = categoryAdapter
 
-        // TextWatcher for search query EditText
+        searchHistory = loadSearchHistory()
+        historyAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, searchHistory)
+        historyListView.adapter = historyAdapter
+
+        // TextWatcher для строки поиска
         editTextSearchQuery.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 clearButton.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+                toggleHistoryListView(s.isNullOrEmpty())
             }
 
             override fun afterTextChanged(s: Editable?) {}
         })
 
+        listView.setOnItemClickListener { parent, view, position, id ->
+            val selectedItem = parent.getItemAtPosition(position) as Item
+            editTextSearchQuery.setText(selectedItem.name)
+            toggleHistoryListView(true) // Снова показываем категории после выбора истории
+        }
+
+        historyListView.setOnItemClickListener { parent, view, position, id ->
+            val selectedItem = parent.getItemAtPosition(position) as String
+            editTextSearchQuery.setText(selectedItem)
+            toggleHistoryListView(true) // Снова показываем категории после выбора истории
+        }
+
         clearButton.setOnClickListener {
             editTextSearchQuery.text.clear()
             clearButton.visibility = View.GONE
             hideKeyboard()
+            toggleHistoryListView(true) // Возвращаем категории при очистке поиска
+        }
+
+        clearHistoryButton.setOnClickListener {
+            clearSearchHistory()
+            historyAdapter.notifyDataSetChanged()
+        }
+
+        searchButton.setOnClickListener {
+            val query = editTextSearchQuery.text.toString()
+            if (query.isNotEmpty()) {
+                saveSearchQuery(query)
+            }
+            hideKeyboard()
+            toggleHistoryListView(true)
         }
 
         return root
+    }
+
+    private fun toggleHistoryListView(showCategories: Boolean) {
+        if (showCategories) {
+            listView.visibility = View.VISIBLE
+            historyListView.visibility = View.GONE
+            clearHistoryButton.visibility = View.GONE
+        } else {
+            listView.visibility = View.GONE
+            historyListView.visibility = View.VISIBLE
+            clearHistoryButton.visibility = View.VISIBLE
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -83,8 +141,37 @@ class CatalogFragment : Fragment() {
     }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(requireContext(), InputMethodManager::class.java)
-        imm?.hideSoftInputFromWindow(view?.windowToken, 0)
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view?.windowToken, 0)
+    }
+
+    private fun saveSearchQuery(query: String) {
+        if (query.isNotEmpty() && !searchHistory.contains(query)) {
+            if (searchHistory.size >= 10) {
+                searchHistory.removeAt(0)
+            }
+            searchHistory.add(query)
+            saveSearchHistory()
+            historyAdapter.notifyDataSetChanged()
+        }
+    }
+
+    private fun loadSearchHistory(): MutableList<String> {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val historySet = prefs.getStringSet(SEARCH_HISTORY_KEY, setOf()) ?: setOf()
+        return historySet.toMutableList()
+    }
+
+    private fun saveSearchHistory() {
+        val prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.putStringSet(SEARCH_HISTORY_KEY, searchHistory.toSet())
+        editor.apply()
+    }
+
+    private fun clearSearchHistory() {
+        searchHistory.clear()
+        saveSearchHistory()
     }
 
     override fun onDestroyView() {
