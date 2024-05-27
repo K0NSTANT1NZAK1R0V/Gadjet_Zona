@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
+import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import com.example.test.R
 import com.example.test.databinding.FragmentDashboardBinding
@@ -24,11 +25,11 @@ class CatalogFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var editTextSearchQuery: EditText
-    private lateinit var searchButton: Button
     private lateinit var clearButton: Button
     private lateinit var clearHistoryButton: Button
     private lateinit var listView: ListView
     private lateinit var historyListView: ListView
+    private lateinit var progressBar: ProgressBar
     private var searchQuery: String = ""
 
     private val PREFS_NAME = "search_prefs"
@@ -51,9 +52,9 @@ class CatalogFragment : Fragment() {
         listView = binding.listView
         historyListView = root.findViewById(R.id.searchHistoryListView)
         editTextSearchQuery = root.findViewById(R.id.editTextText)
-        searchButton = root.findViewById(R.id.searchButton)
         clearButton = root.findViewById(R.id.clearButton)
         clearHistoryButton = root.findViewById(R.id.clearHistoryButton)
+        progressBar = root.findViewById(R.id.progressBar)
 
         // Восстанавливаем состояние текста поискового запроса
         if (savedInstanceState != null) {
@@ -121,10 +122,6 @@ class CatalogFragment : Fragment() {
             historyAdapter.notifyDataSetChanged()
         }
 
-        searchButton.setOnClickListener {
-            performSearch()
-        }
-
         return root
     }
 
@@ -146,7 +143,17 @@ class CatalogFragment : Fragment() {
             saveSearchQuery(query)
             hideKeyboard()
             toggleHistoryListView(true)
+            showProgressBar(true)
+            // Здесь выполняется ваш код поиска
+            Handler(Looper.getMainLooper()).postDelayed({
+                showProgressBar(false)
+                // Здесь обновите ваш список с результатами поиска
+            }, 3000) // Имитация времени выполнения поиска (3 секунды)
         }
+    }
+
+    private fun showProgressBar(show: Boolean) {
+        progressBar.visibility = if (show) View.VISIBLE else View.GONE
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
