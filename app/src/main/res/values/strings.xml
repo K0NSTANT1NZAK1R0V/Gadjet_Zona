@@ -30,4 +30,6 @@
     <string name="naming">Naming</string>
     <string name="price">149.99$</string>
     <string name="opis">Opisanie</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

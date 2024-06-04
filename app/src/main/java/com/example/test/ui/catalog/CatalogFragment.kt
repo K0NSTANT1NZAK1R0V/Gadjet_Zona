@@ -144,10 +144,9 @@ class CatalogFragment : Fragment() {
             hideKeyboard()
             toggleHistoryListView(true)
             showProgressBar(true)
-            // Здесь выполняется ваш код поиска
+            // Здесь выполняется код поиска
             Handler(Looper.getMainLooper()).postDelayed({
                 showProgressBar(false)
-                // Здесь обновите ваш список с результатами поиска
             }, 3000) // Имитация времени выполнения поиска (3 секунды)
         }
     }
