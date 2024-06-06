@@ -8,90 +8,38 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.test.R
+import com.example.test.ui.sbornik.Product
 
-class LikesAdapter: RecyclerView.Adapter<LikesAdapter.ViewHolder>() {
-
-    private val itemNames = arrayOf(
-        "Xiaomi Redmi Note 6",
-        "Xiaomi Redmi Note 7",
-        "Xiaomi Redmi Note 8",
-        "Xiaomi Redmi Note 9",
-        "Xiaomi Redmi Note 10",
-        "Xiaomi Redmi Note 11")
-
-    private val itemPrices = arrayOf(
-        "6990.00₽",
-        "8990.00₽",
-        "10990.00₽",
-        "12990.00₽",
-        "14990.00₽",
-        "16990.00₽")
-
-    private val itemImages = intArrayOf(
-        R.drawable.smart_1,
-        R.drawable.smart_2,
-        R.drawable.smart_3,
-        R.drawable.smart_4,
-        R.drawable.smart_5,
-        R.drawable.smart_6
-    )
-
-    private val itemRating = arrayOf(
-        4.9,
-        4.5,
-        4.2,
-        4.4,
-        4.6,
-        4.7)
-
-    private val ItemKodTovara = arrayOf(
-        "0000000001",
-        "0000000002",
-        "0000000003",
-        "0000000004",
-        "0000000005",
-        "0000000006"
-    )
-
-
-    inner class ViewHolder (itemView: View) : RecyclerView.ViewHolder(itemView){
-
-        var image: ImageView
-        var textName: TextView
-        var textPrice: TextView
-        var textRating: TextView
-        var textKodTovara: TextView
-        var Rating: RatingBar
-
-        init {
-            image =itemView.findViewById(R.id.imageLike)
-            textName = itemView.findViewById(R.id.nameLikes)
-            textPrice = itemView.findViewById(R.id.priceLikes)
-            textRating = itemView.findViewById(R.id.rating_TV)
-            textKodTovara = itemView.findViewById(R.id.kod_tovara)
-            Rating = itemView.findViewById(R.id.rating)
-        }
-    }
+class LikesAdapter(private var likedProducts: List<Product>) : RecyclerView.Adapter<LikesAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.likes_item_recycler_view, parent, false)
-        return ViewHolder(v)
-    }
-
-    override fun getItemCount(): Int {
-        return itemNames.size
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.likes_item_recycler_view, parent, false)
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.textName.text = itemNames [position]
-        holder.textPrice.text = itemPrices [position]
-        holder.image.setImageResource(itemImages[position])
-        holder.textRating.text = itemRating[position].toString()
-        holder.Rating.rating = itemRating[position].toFloat()
-        holder.textKodTovara.text = ItemKodTovara[position]
+        val product = likedProducts[position]
 
-        holder.itemView.setOnClickListener {v: View ->
+        val resId = holder.itemView.context.resources.getIdentifier(product.imageResId, "drawable", holder.itemView.context.packageName)
+        holder.productImage.setImageResource(resId)
+        holder.productName.text = product.name
+        holder.productRating.text = product.rating.toString()
+        holder.productPrice.text = String.format("%.2f₽", product.price)
+        holder.productRate.rating = product.rating.toFloat()
+    }
 
-        }
+    override fun getItemCount(): Int = likedProducts.size
+
+    fun updateProducts(newProducts: List<Product>) {
+        likedProducts = newProducts
+        notifyDataSetChanged()
+    }
+
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val productImage: ImageView = itemView.findViewById(R.id.imageLike)
+        val productName: TextView = itemView.findViewById(R.id.nameLikes)
+        val productRating: TextView = itemView.findViewById(R.id.rating_TV)
+        val productPrice: TextView = itemView.findViewById(R.id.priceLikes)
+        val productRate: RatingBar = itemView.findViewById(R.id.rating)
     }
 }

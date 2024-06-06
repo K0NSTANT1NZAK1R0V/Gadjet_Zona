@@ -5,6 +5,8 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
@@ -13,7 +15,9 @@ import com.example.test.R
 
 class ProductAdapter(
     private val context: Context,
-    private val productList: List<Product>
+    private val productList: List<Product>,
+    private val onLikeClick: (Product) -> Unit,
+    private val onBuyClick: (Product) -> Unit
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
@@ -24,7 +28,6 @@ class ProductAdapter(
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         val product = productList[position]
 
-        // Загрузка изображения из ресурсов drawable по имени
         val resId = context.resources.getIdentifier(product.imageResId, "drawable", context.packageName)
         holder.productImage.setImageResource(resId)
         holder.productName.text = product.name
@@ -32,7 +35,13 @@ class ProductAdapter(
         holder.productPrice.text = String.format("%.2f₽", product.price)
         holder.productRate.rating = product.rating.toFloat()
 
+        holder.likeButton.setOnClickListener {
+            onLikeClick(product)
+        }
 
+        holder.buyButton.setOnClickListener {
+            onBuyClick(product)
+        }
     }
 
     override fun getItemCount(): Int = productList.size
@@ -43,7 +52,8 @@ class ProductAdapter(
         val productRating: TextView = itemView.findViewById(R.id.rating_TV)
         val productPrice: TextView = itemView.findViewById(R.id.priceTextView)
         val productRate: RatingBar = itemView.findViewById(R.id.rating)
+        val likeButton: ImageButton = itemView.findViewById(R.id.likeButton)
+        val buyButton: Button = itemView.findViewById(R.id.buyButton)
     }
 }
-
 

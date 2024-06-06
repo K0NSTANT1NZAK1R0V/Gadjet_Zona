@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +23,8 @@ class SbornikFragment : Fragment() {
     private lateinit var productList: List<Product>
 
     private var category: String? = null
+
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +50,8 @@ class SbornikFragment : Fragment() {
     private fun loadProductsFromAssets() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val jsonString = requireContext().assets.open("products.json").bufferedReader().use { it.readText() }
+                val jsonString = requireContext().assets.open("products.json").bufferedReader()
+                    .use { it.readText() }
                 productList = Gson().fromJson(jsonString, Array<Product>::class.java).toList()
                 withContext(Dispatchers.Main) {
                     setupRecyclerView()
@@ -60,7 +64,15 @@ class SbornikFragment : Fragment() {
 
     private fun setupRecyclerView() {
         val filteredProducts = productList.filter { it.category == category }
-        productAdapter = ProductAdapter(requireContext(), filteredProducts)
+        productAdapter = ProductAdapter(requireContext(), filteredProducts,
+            onLikeClick = { product ->
+                sharedViewModel.addProduct(product)
+            },
+            onBuyClick = { product ->
+                sharedViewModel.addProduct(product)
+            }
+        )
         recyclerView.adapter = productAdapter
+        productAdapter.notifyDataSetChanged()
     }
 }
