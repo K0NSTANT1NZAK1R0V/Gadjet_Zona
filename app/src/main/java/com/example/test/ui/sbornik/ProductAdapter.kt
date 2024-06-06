@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.test.R
@@ -29,6 +30,8 @@ class ProductAdapter(
         holder.productName.text = product.name
         holder.productRating.text = product.rating.toString()
         holder.productPrice.text = String.format("%.2f₽", product.price)
+        holder.productRate.rating = product.rating.toFloat()
+
 
     }
 
@@ -39,6 +42,7 @@ class ProductAdapter(
         val productName: TextView = itemView.findViewById(R.id.nameTextView)
         val productRating: TextView = itemView.findViewById(R.id.rating_TV)
         val productPrice: TextView = itemView.findViewById(R.id.priceTextView)
+        val productRate: RatingBar = itemView.findViewById(R.id.rating)
     }
 }
 
