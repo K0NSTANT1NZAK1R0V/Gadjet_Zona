@@ -19,11 +19,16 @@ import androidx.fragment.app.Fragment
 import com.example.test.R
 import com.example.test.databinding.FragmentDashboardBinding
 
+interface OnCategorySelectedListener {
+    fun onCategorySelected(category: String)
+}
+
 class CatalogFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
 
+    private var listener: OnCategorySelectedListener? = null
     private lateinit var editTextSearchQuery: EditText
     private lateinit var clearButton: Button
     private lateinit var clearHistoryButton: Button
@@ -75,7 +80,7 @@ class CatalogFragment : Fragment() {
             Item(R.drawable.free_icon_tool_box, "Инструменты")
         )
 
-        categoryAdapter = CustomAdapter(requireContext(), dataList)
+        categoryAdapter = CustomAdapter(requireContext(), dataList, listener!!)
         listView.adapter = categoryAdapter
 
         searchHistory = loadSearchHistory()
@@ -199,5 +204,24 @@ class CatalogFragment : Fragment() {
         _binding = null
         // Удаляем все колбэки из хендлера при уничтожении фрагмента
         handler.removeCallbacksAndMessages(null)
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is OnCategorySelectedListener) {
+            listener = context
+        } else {
+            throw RuntimeException("$context must implement OnCategorySelectedListener")
+        }
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        listener = null
+    }
+
+    // Обработка выбора категории
+    private fun handleCategorySelection(category: String) {
+        listener?.onCategorySelected(category)
     }
 }

@@ -9,9 +9,10 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.test.databinding.ActivityMainBinding
+import com.example.test.ui.catalog.OnCategorySelectedListener
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnCategorySelectedListener {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -37,6 +38,15 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
+
+    override fun onCategorySelected(category: String) {
+        val actionId = R.id.action_navigation_dashboard_to_sbornikFragment
+        val bundle = Bundle().apply {
+            putString("category", category)
+        }
+        findNavController(R.id.nav_host_fragment_activity_main).navigate(actionId, bundle)
+    }
+
 
     private fun applyTheme() {
         // Получаем текущий режим темы

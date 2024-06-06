@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.example.test.R
 
-class CustomAdapter(private val context: Context, private val dataList: List<Item>) : BaseAdapter() {
+class CustomAdapter(private val context: Context, private val dataList: List<Item>, private val listener: OnCategorySelectedListener) : BaseAdapter() {
     override fun getCount(): Int {
         return dataList.size
     }
@@ -32,6 +32,11 @@ class CustomAdapter(private val context: Context, private val dataList: List<Ite
 
         val itemName: TextView = view.findViewById(R.id.name_item_tv)
         itemName.text = item.name
+
+        view.setOnClickListener {
+            val category = item.name
+            listener.onCategorySelected(category)
+        }
 
         return view
     }
